@@ -4,12 +4,16 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.Assert;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
 import com.flightreservation.constants.Constants;
-import com.flightreservation.pages.Book;
+import com.flightreservation.pages.BookPage;
 import com.flightreservation.pages.FlightDetails;
+import com.flightreservation.pages.OptionsPage;
 
 import cucumber.api.PendingException;
+import cucumber.api.java.After;
 import cucumber.api.java.en.Given;
 import cucumber.api.java.en.Then;
 import cucumber.api.java.en.When;
@@ -18,7 +22,9 @@ public class Test {
 
 	public String url = "https://www.qantas.com";
 	FlightDetails flightDetails;
+	OptionsPage optionPage;
 	String tripCost;
+	
 
 	@Given("user navigates to site")
 	public void user_navigates_to_site() throws Throwable {
@@ -35,21 +41,28 @@ public class Test {
 	public void user_search_for_one_way_filght_pair(String source,
 			String destination) throws Throwable {
 
-		Book bookingPage = new Book(Constants.driver);
+		BookPage bookingPage = new BookPage(Constants.driver);
 		bookingPage.selectBookMenu();
-		bookingPage.selectflightsLink();
-		bookingPage.selectOneWayFlightSearch();
-		bookingPage.checkOneWayRadioButton();
-		bookingPage.enterText_FromTextBox(source);
-		bookingPage.enterText_ToTextBox(destination);
-		bookingPage.departDate();		
-		bookingPage.clickSearchFlighButton();
+		flightDetails = new FlightDetails(Constants.driver);
+		flightDetails.selectflightsLink();
+		flightDetails.selectOneWayFlightSearch();
+		flightDetails.checkOneWayRadioButton();
+		flightDetails.enterText_FromTextBox(source);
+		flightDetails.enterText_ToTextBox(destination);
+		flightDetails.departDate();		
+		flightDetails.clickSearchFlighButton();
 		Thread.sleep(5000);
 	}
 
-	@When("user select Re e-deal value and add to trip")
+	@Then("verify flight widget is O")
+	public void verifyflightWidget()
+	{
+		Assert.assertEquals("$0", flightDetails.getFlightWidgetZero());
+	}
+	
+	@Then("user select Re e-deal value and add to trip")
 	public void SelectAnyDeal_AddToTrip() throws InterruptedException {
-		flightDetails = new FlightDetails(Constants.driver);
+		
 		tripCost = flightDetails.selectAnyDeal();
 		Thread.sleep(2000);
 		flightDetails.clickonAddToTripButton();
@@ -59,9 +72,23 @@ public class Test {
 	public void verify_subtotal() throws Throwable {
 
 		Assert.assertEquals(tripCost, flightDetails.getSubTotal());
-		tearDown();
+		
+	}
+	@When("user click on continue till options page")
+	public void clickOnContinue() throws InterruptedException
+	{
+		
+		flightDetails.clickonContinueAndAcceptButtonTillOptionsPage();
 	}
 
+	@When("user check baggage and seats")
+	public void addBaggage() throws InterruptedException
+	{
+		optionPage = new OptionsPage(Constants.driver);
+		optionPage.addBaggage();	
+		
+	}
+	@After
 	public static void tearDown() {
 
 		Constants.driver.close();
